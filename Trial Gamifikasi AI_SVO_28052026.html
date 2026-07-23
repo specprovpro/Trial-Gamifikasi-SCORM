@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Trial Gamifikasi AI 2.0</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=VT323&display=swap');
+
+        :root {
+            --bg-dark: #09090e;
+            --neon-pink: #ff007f;
+            --neon-cyan: #00f2fe;
+            --neon-lime: #b2ff05;
+            --neon-purple: #8a2be2;
+            --text-light: #e0e0e0;
+            --font-retro: 'VT323', monospace;
+            --font-modern: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-modern);
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            overflow-x: hidden;
+            /* Retro Grid Background */
+            background-image: 
+                linear-gradient(rgba(0, 242, 254, 0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 254, 0.15) 1px, transparent 1px);
+            background-size: 30px 30px;
+            background-position: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Typography */
+        h1, h2, h3 { font-family: var(--font-retro); letter-spacing: 1px; }
+        h1 { font-size: 2.5rem; text-align: center; text-shadow: 2px 2px var(--neon-pink); }
+        .highlight-cyan { color: var(--neon-cyan); }
+        .highlight-pink { color: var(--neon-pink); }
+        .highlight-lime { color: var(--neon-lime); }
+
+        /* Container & Screens */
+        .screen {
+            display: none;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+            flex-direction: column;
+            justify-content: center;
+            animation: fadeIn 0.5s ease-out;
+        }
+        .screen.active { display: flex; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* UI Elements */
+        .btn-retro {
+            font-family: var(--font-retro);
+            font-size: 1.5rem;
+            padding: 15px 30px;
+            background: transparent;
+            color: var(--neon-cyan);
+            border: 2px solid var(--neon-cyan);
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 4px 4px 0px var(--neon-pink);
+            transition: all 0.2s;
+            margin-top: 20px;
+            width: 100%;
+        }
+        .btn-retro:hover, .btn-retro:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px var(--neon-pink);
+            background: var(--neon-cyan);
+            color: var(--bg-dark);
+        }
+
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; margin-bottom: 5px; font-weight: 600; color: var(--neon-lime); }
+        .input-retro {
+            width: 100%;
+            padding: 12px;
+            font-family: var(--font-modern);
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--neon-purple);
+            color: white;
+            font-size: 1rem;
+            border-radius: 4px;
+        }
+        .input-retro:focus { outline: none; border-color: var(--neon-cyan); box-shadow: 0 0 10px rgba(0, 242, 254, 0.5); }
+
+        /* Screen 1 & 2: Gateway & Briefing */
+        .box-panel {
+            background: rgba(15, 12, 41, 0.9);
+            border: 2px solid var(--neon-purple);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(138, 43, 226, 0.3);
+            margin-bottom: 20px;
+        }
+        .story-hook { font-size: 1.1rem; line-height: 1.6; margin-bottom: 15px; border-left: 4px solid var(--neon-cyan); padding-left: 15px;}
+        
+        /* Screen 3: Gameplay */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.8);
+            padding: 10px 20px;
+            border-bottom: 2px solid var(--neon-purple);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .score-display { font-family: var(--font-retro); font-size: 1.5rem; color: var(--neon-lime); }
+        .audio-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--neon-cyan); }
+        
+        .progress-container { width: 100%; height: 10px; background: #333; margin-top: 10px; border-radius: 5px; overflow: hidden;}
+        .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--neon-purple), var(--neon-pink)); transition: width 0.3s; }
+
+        .drop-zones {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            height: 180px;
+        }
+        .zone {
+            flex: 1;
+            border: 2px dashed #555;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 10px;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .zone-deposit { border-color: var(--neon-lime); color: var(--neon-lime); background: rgba(178, 255, 5, 0.05); }
+        .zone-withdrawal { border-color: var(--neon-pink); color: var(--neon-pink); background: rgba(255, 0, 127, 0.05); }
+        .zone.drag-over { transform: scale(1.05); background: rgba(255,255,255,0.1); }
+        
+        .zone i { font-size: 3rem; margin-bottom: 10px; font-style: normal; }
+
+        .card-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            min-height: 200px;
+        }
+        .card {
+            background: linear-gradient(135deg, #2b1055, #7597de);
+            border: 2px solid var(--neon-cyan);
+            padding: 20px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            cursor: grab;
+            position: absolute;
+            transition: transform 0.2s, opacity 0.2s;
+            touch-action: none; /* Prevent scrolling while dragging on mobile */
+            user-select: none;
+        }
+        .card:active { cursor: grabbing; }
+
+        .feedback-toast {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-family: var(--font-retro); font-size: 2rem; padding: 20px;
+            border-radius: 10px; display: none; z-index: 100; text-align: center;
+            pointer-events: none;
+        }
+        .toast-success { background: rgba(178, 255, 5, 0.9); color: #000; box-shadow: 0 0 20px var(--neon-lime); }
+        .toast-error { background: rgba(255, 0, 127, 0.9); color: #fff; box-shadow: 0 0 20px var(--neon-pink); }
+
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+        .flash-green { animation: flashGreen 0.5s; }
+        @keyframes flashGreen { 0% { background-color: rgba(178,255,5,0.5); } 100% { background-color: transparent; } }
+
+        /* Badges */
+        .badges-container { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
+        .badge { 
+            width: 50px; height: 50px; border-radius: 50%; background: #333; 
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; opacity: 0.3; filter: grayscale(100%);
+            border: 2px solid #555; transition: all 0.5s;
+        }
+        .badge.earned { opacity: 1; filter: grayscale(0%); border-color: var(--neon-lime); box-shadow: 0 0 10px var(--neon-lime); }
+
+        /* Screen 4: Result */
+        .result-list {
+            margin-top: 20px;
+            max-height: 350px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        .result-item {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #555;
+        }
+        .result-item.correct { border-left-color: var(--neon-lime); }
+        .result-item.wrong { border-left-color: var(--neon-pink); }
+        .result-desc { font-size: 0.9rem; color: #aaa; margin-top: 5px; }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-family: var(--font-retro);
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: auto;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #111; }
+        ::-webkit-scrollbar-thumb { background: var(--neon-purple); border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <!-- SCREEN 1: THE GATEWAY -->
+    <div id="screen-login" class="screen active">
+        <div class="box-panel">
+            <h1><span class="highlight-cyan">TRIAL GAMIFIKASI AI 2.0</span> EBA</h1>
+            <h3 style="text-align: center; margin-bottom: 20px; color: var(--neon-pink);">The EBA Sorter</h3>
+            
+            <div class="input-group">
+                <label for="playerName">Nama:</label>
+                <input type="text" id="playerName" class="input-retro" placeholder="Masukkan Nama Anda..." autocomplete="off">
+            </div>
+            <div class="input-group">
+                <label for="playerNIK">NIK:</label>
+                <input type="number" id="playerNIK" class="input-retro" placeholder="Masukkan NIK..." autocomplete="off">
+            </div>
+            <button class="btn-retro" onclick="goToBriefing()">Login Sistem</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 2: MISSION BRIEFING -->
+    <div id="screen-briefing" class="screen">
+        <div class="box-panel">
+            <h2>Welcome, <span id="dispName" class="highlight-lime">PM</span>!</h2>
+            <br>
+            <div class="story-hook">
+                <p><strong>[MISSION INITIATED]</strong></p>
+                <p>Anda baru saja memetakan stakeholder kunci Anda. Namun, proyek hanya akan sukses jika Anda memiliki toleransi, rasa aman, dan komunikasi terbuka dengan mereka.</p><br>
+                <p>Bagaimana caranya? Dengan membangun <span class="highlight-cyan">Emotional Bank Account (EBA)</span> yang tinggi.</p>
+            </div>
+            
+            <h3 class="highlight-pink">Aturan Main:</h3>
+            <ul style="margin-left: 20px; margin-top: 10px; line-height: 1.5; font-size: 0.95rem;">
+                <li>Sebuah <span class="highlight-cyan">Kartu Perilaku</span> akan muncul.</li>
+                <li>Tarik (Drag) ke <strong>Brankas Setoran</strong> jika itu membangun relasi (Deposit). <span class="highlight-lime">[+100 Saldo]</span></li>
+                <li>Tarik (Drag) ke <strong>Tong Sampah</strong> jika itu perilaku reaktif perusak relasi (Withdrawal). <span class="highlight-lime">[+50 Saldo Diselamatkan]</span></li>
+                <li>Salah tempat? EBA Anda bocor! <span class="highlight-pink">[-100 Penalti]</span></li>
+            </ul>
+            <br>
+            <p style="text-align: center; font-style: italic; font-weight: bold;">Uji insting Anda. Sortir dengan cepat!</p>
+            
+            <button class="btn-retro" onclick="startGame()">Mulai Simulasi</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 3: CORE EXECUTION (GAMEPLAY) -->
+    <div id="screen-game" class="screen" style="padding-top: 0; max-width: 100%;">
+        <div class="game-header">
+            <div>
+                <span style="font-size: 0.8rem; color: #888;">SALDO EBA</span><br>
+                <span class="score-display" id="scoreDisplay">0</span>
+            </div>
+            <button class="audio-toggle" id="audioBtn" onclick="toggleAudio()">🔈</button>
+        </div>
+        
+        <div style="padding: 0 20px;">
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="badges-container">
+                <div class="badge" id="badge-1" title="Novice Sorter">🥉</div>
+                <div class="badge" id="badge-2" title="Pro Sorter">🥈</div>
+                <div class="badge" id="badge-3" title="EBA Master">🥇</div>
+            </div>
+
+            <div class="drop-zones">
+                <div class="zone zone-deposit" id="zoneDeposit">
+                    <i>🏦</i>
+                    <h3>Brankas Setoran (Deposit)</h3>
+                </div>
+                <div class="zone zone-withdrawal" id="zoneWithdrawal">
+                    <i>🗑️</i>
+                    <h3>Tong Sampah (Withdrawal)</h3>
+                </div>
+            </div>
+
+            <div class="card-container" id="cardContainer">
+                <!-- Card inject via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN 4: POST-ACTION DEBRIEF -->
+    <div id="screen-result" class="screen">
+        <div class="box-panel">
+            <h1 class="highlight-cyan">MISSION ACCOMPLISHED</h1>
+            <div style="text-align: center; margin: 20px 0;">
+                <h3>Final Saldo EBA: <span id="finalScore" class="highlight-lime">0</span></h3>
+                <p id="reinforcementMsg" style="margin-top: 10px; font-weight: bold;"></p>
+            </div>
+            
+            <h3 class="highlight-pink">Debriefing Report:</h3>
+            <div class="result-list" id="resultList">
+                <!-- Results inject via JS -->
+            </div>
+
+            <button class="btn-retro" onclick="location.reload()">Ulangi Simulasi</button>
+        </div>
+    </div>
+
+    <div id="feedbackToast" class="feedback-toast"></div>
+
+    <footer>
+        Education & Training Dept. © 2026<br>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- DATA MATERI (10 SOAL) ---
+        const questions = [
+            { id: 1, text: "Mendengarkan keluhan rekan kerja tanpa menyela hingga ia selesai.", type: "deposit", explanation: "Mendengarkan secara empatik adalah salah satu deposit terbesar menurut Covey." },
+            { id: 2, text: "Membatalkan janji meeting sepihak 10 menit sebelum acara.", type: "withdrawal", explanation: "Melanggar komitmen adalah tarikan besar yang merusak rasa aman (trust)." },
+            { id: 3, text: "Memberikan apresiasi spesifik atas hasil kerja keras anggota tim di depan forum.", type: "deposit", explanation: "Menjelaskan harapan dan memberi apresiasi spesifik membangun motivasi & saldo EBA." },
+            { id: 4, text: "Menyalahkan divisi lain secara terbuka saat target proyek meleset.", type: "withdrawal", explanation: "Sikap reaktif (menyalahkan keadaan/orang lain) mengikis kepercayaan antar departemen." },
+            { id: 5, text: "Mengklarifikasi ekspektasi secara detail sebelum memulai proyek baru dengan klien.", type: "deposit", explanation: "Mengklarifikasi harapan mencegah kesalahpahaman dan merupakan deposit yang kuat." },
+            { id: 6, text: "Menutupi kesalahan kecil di depan klien agar terlihat sempurna.", type: "withdrawal", explanation: "Kurangnya integritas (berbohong/menutupi) akan menjadi tarikan masif saat ketahuan." },
+            { id: 7, text: "Meminta maaf secara tulus ketika Anda salah mengambil keputusan.", type: "deposit", explanation: "Meminta maaf secara tulus ketika melakukan penarikan adalah sebuah deposit (Covey)." },
+            { id: 8, text: "Mengabaikan chat penting dari anggota tim yang butuh bantuan urgen.", type: "withdrawal", explanation: "Mengabaikan hal kecil yang penting bagi orang lain adalah penarikan (withdrawal)." },
+            { id: 9, text: "Menepati deadline yang sudah disepakati bersama secara konsisten.", type: "deposit", explanation: "Menepati janji/komitmen membangun kredibilitas dan keandalan di mata stakeholder." },
+            { id: 10, text: "Membicarakan keburukan atasan di belakang bersama staf lain.", type: "withdrawal", explanation: "Menunjukkan ketidaksetiaan pada mereka yang tidak hadir merusak integritas dan saldo." }
+        ];
+
+        // --- GAME STATE ---
+        let currentQIndex = 0;
+        let score = 0;
+        let userHistory = [];
+        let shuffledQuestions = [];
+        let isAudioMuted = true;
+        let audioCtx;
+        let bgmInterval;
+
+        // --- AUDIO SYSTEM (Web Audio API) ---
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playTone(freq, type, duration, vol=0.1) {
+            if (isAudioMuted || !audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function sfxCorrect() {
+            playTone(600, 'sine', 0.1, 0.1);
+            setTimeout(() => playTone(800, 'sine', 0.2, 0.1), 100);
+        }
+
+        function sfxWrong() {
+            playTone(300, 'sawtooth', 0.3, 0.1);
+            setTimeout(() => playTone(200, 'sawtooth', 0.4, 0.1), 150);
+        }
+
+        function sfxTrash() {
+            playTone(150, 'square', 0.1, 0.05);
+            setTimeout(() => playTone(400, 'sine', 0.2, 0.1), 100);
+        }
+
+        function playBGMStep() {
+            if(isAudioMuted || !audioCtx) return;
+            const notes = [220, 261.63, 329.63, 392.00, 440]; // A Minor Pentatonic
+            const note = notes[Math.floor(Math.random() * notes.length)];
+            playTone(note, 'triangle', 0.2, 0.02);
+        }
+
+        function toggleAudio() {
+            isAudioMuted = !isAudioMuted;
+            document.getElementById('audioBtn').innerText = isAudioMuted ? "🔈" : "🔊";
+            if(!isAudioMuted) {
+                initAudio();
+                if(!bgmInterval) bgmInterval = setInterval(playBGMStep, 400);
+            } else {
+                clearInterval(bgmInterval);
+                bgmInterval = null;
+            }
+        }
+
+        // --- NAVIGATION & INIT ---
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function goToBriefing() {
+            const name = document.getElementById('playerName').value.trim();
+            const nik = document.getElementById('playerNIK').value.trim();
+            if (!name || !nik) {
+                alert("Mohon lengkapi Nama dan NIK Anda!");
+                return;
+            }
+            document.getElementById('dispName').innerText = name;
+            initAudio(); // Initialize audio context on first user gesture
+            switchScreen('screen-briefing');
+        }
+
+        function startGame() {
+            shuffledQuestions = [...questions].sort(() => Math.random() - 0.5); // Shuffle
+            currentQIndex = 0;
+            score = 0;
+            userHistory = [];
+            updateUI();
+            switchScreen('screen-game');
+            renderCard();
+        }
+
+        function updateUI() {
+            document.getElementById('scoreDisplay').innerText = score;
+            const progress = (currentQIndex / questions.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+
+            // Badges logic
+            if (currentQIndex >= 3) document.getElementById('badge-1').classList.add('earned');
+            if (currentQIndex >= 7) document.getElementById('badge-2').classList.add('earned');
+            if (currentQIndex === 10 && score > 500) document.getElementById('badge-3').classList.add('earned');
+        }
+
+        // --- DRAG AND DROP LOGIC (Touch & Mouse Support) ---
+        function renderCard() {
+            const container = document.getElementById('cardContainer');
+            container.innerHTML = '';
+            
+            if (currentQIndex >= shuffledQuestions.length) {
+                endGame();
+                return;
+            }
+
+            const q = shuffledQuestions[currentQIndex];
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerText = q.text;
+            
+            // Mouse Events
+            card.setAttribute('draggable', true);
+            card.addEventListener('dragstart', handleDragStart);
+            card.addEventListener('dragend', handleDragEnd);
+
+            // Touch Events for Mobile (Crucial for "Scrollable di HP")
+            let startX, startY, initialX, initialY;
+            card.addEventListener('touchstart', (e) => {
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                startY = touch.clientY;
+                initialX = card.offsetLeft;
+                initialY = card.offsetTop;
+                card.style.transition = 'none';
+                card.style.zIndex = '1000';
+            }, {passive: false});
+
+            card.addEventListener('touchmove', (e) => {
+                e.preventDefault(); // Prevent scrolling while dragging
+                const touch = e.touches[0];
+                const dx = touch.clientX - startX;
+                const dy = touch.clientY - startY;
+                card.style.transform = `translate(${dx}px, ${dy}px) rotate(${dx*0.05}deg)`;
+            }, {passive: false});
+
+            card.addEventListener('touchend', (e) => {
+                card.style.transition = 'transform 0.3s, opacity 0.3s';
+                card.style.zIndex = '1';
+                
+                // Hide card temporarily to find the element underneath
+                card.style.visibility = 'hidden';
+                const touch = e.changedTouches[0];
+                const elemUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+                card.style.visibility = 'visible';
+
+                const dropZone = elemUnder ? elemUnder.closest('.zone') : null;
+                
+                if (dropZone) {
+                    processDrop(dropZone.id === 'zoneDeposit' ? 'deposit' : 'withdrawal', card);
+                } else {
+                    // Snap back
+                    card.style.transform = 'translate(0px, 0px) rotate(0deg)';
+                }
+            });
+
+            container.appendChild(card);
+            updateUI();
+        }
+
+        // HTML5 Drag handlers for Desktop
+        function handleDragStart(e) {
+            e.dataTransfer.setData('text/plain', 'card');
+            setTimeout(() => this.style.opacity = '0.5', 0);
+        }
+        function handleDragEnd(e) {
+            this.style.opacity = '1';
+        }
+
+        // Dropzone Listeners
+        const zones = document.querySelectorAll('.zone');
+        zones.forEach(zone => {
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('drag-over');
+            });
+            zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('drag-over');
+                const card = document.querySelector('.card');
+                processDrop(zone.id === 'zoneDeposit' ? 'deposit' : 'withdrawal', card);
+            });
+        });
+
+        // --- GAME MECHANICS ---
+        function processDrop(targetZone, cardElement) {
+            const q = shuffledQuestions[currentQIndex];
+            const isCorrect = q.type === targetZone;
+            
+            let pts = 0;
+            let fbText = "";
+            let fbClass = "";
+
+            if (isCorrect) {
+                if (targetZone === 'deposit') {
+                    pts = 100;
+                    fbText = "Deposit Sukses!\n+100 EBA";
+                    sfxCorrect();
+                } else {
+                    pts = 50;
+                    fbText = "Risiko Dihindari!\n+50 EBA";
+                    sfxTrash();
+                }
+                fbClass = "toast-success";
+                document.body.classList.add('flash-green');
+                setTimeout(() => document.body.classList.remove('flash-green'), 500);
+            } else {
+                pts = -100;
+                fbText = "Awas! Relasi Rusak.\n-100 EBA";
+                fbClass = "toast-error";
+                sfxWrong();
+                document.body.classList.add('shake');
+                setTimeout(() => document.body.classList.remove('shake'), 400);
+            }
+
+            score += pts;
+            
+            // Record History
+            userHistory.push({
+                text: q.text,
+                userChoice: targetZone,
+                correctType: q.type,
+                isCorrect: isCorrect,
+                explanation: q.explanation
+            });
+
+            showToast(fbText, fbClass);
+            
+            // Animate card out
+            cardElement.style.transform = targetZone === 'deposit' ? 'translate(-200px, -200px) scale(0)' : 'translate(200px, -200px) scale(0)';
+            cardElement.style.opacity = '0';
+            
+            setTimeout(() => {
+                currentQIndex++;
+                renderCard();
+            }, 400);
+        }
+
+        function showToast(msg, className) {
+            const toast = document.getElementById('feedbackToast');
+            toast.innerText = msg;
+            toast.className = `feedback-toast ${className}`;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 1200);
+        }
+
+        // --- DEBRIEFING ---
+        function endGame() {
+            updateUI(); // Fill progress bar fully
+            setTimeout(() => {
+                switchScreen('screen-result');
+                renderResults();
+            }, 500);
+        }
+
+        function renderResults() {
+            document.getElementById('finalScore').innerText = score;
+            
+            const msgEl = document.getElementById('reinforcementMsg');
+            if (score >= 750) {
+                msgEl.innerText = "Luar Biasa! Anda memiliki 'Saldo Emosi' yang sangat kaya. Tim Anda pasti merasa aman bekerja dengan Anda.";
+                msgEl.style.color = "var(--neon-lime)";
+            } else if (score >= 400) {
+                msgEl.innerText = "Kerja Bagus! Namun masih ada beberapa kebocoran saldo yang perlu dijaga dalam komunikasi harian.";
+                msgEl.style.color = "var(--neon-cyan)";
+            } else {
+                msgEl.innerText = "Waspada! Terlalu banyak tarikan. Anda perlu lebih sadar untuk melakukan Setoran (Deposit) kepada stakeholder Anda.";
+                msgEl.style.color = "var(--neon-pink)";
+            }
+
+            const listEl = document.getElementById('resultList');
+            listEl.innerHTML = '';
+            
+            userHistory.forEach((item, index) => {
+                const li = document.createElement('div');
+                li.className = `result-item ${item.isCorrect ? 'correct' : 'wrong'}`;
+                
+                const status = item.isCorrect 
+                    ? `<span style="color:var(--neon-lime);">✔ TEPAT</span>` 
+                    : `<span style="color:var(--neon-pink);">✖ KELIRU (Seharusnya: ${item.correctType.toUpperCase()})</span>`;
+                
+                li.innerHTML = `
+                    <div style="font-weight: 600; font-size:1.1rem; margin-bottom:5px;">${index+1}. ${item.text}</div>
+                    <div>${status}</div>
+                    <div class="result-desc">${item.explanation}</div>
+                `;
+                listEl.appendChild(li);
+            });
+        }
+    </script>
+</body>
+</html>
