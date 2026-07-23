@@ -572,8 +572,8 @@
                     fbText = "Deposit Sukses!\n+100 EBA";
                     sfxCorrect();
                 } else {
-                    pts = 50;
-                    fbText = "Risiko Dihindari!\n+50 EBA";
+                    pts = 100;
+                    fbText = "Risiko Dihindari!\n+100 EBA";
                     sfxTrash();
                 }
                 fbClass = "toast-success";
@@ -622,6 +622,17 @@
         // --- DEBRIEFING ---
         function endGame() {
             updateUI(); // Fill progress bar fully
+            
+            let nilaiSkala100 = Math.round((score / 1000) * 100);
+            if (nilaiSkala100 < 0) nilaiSkala100 = 0;
+            console.log("🚀 [GITHUB] Game Selesai! Mengirim nilai ke LMS:", nilaiSkala100);
+            
+            window.parent.postMessage({
+              jenis: "GAME_SELESAI",
+              nilai: nilaiSkala100,
+              adaNilai: true
+            }, "*");
+            
             setTimeout(() => {
                 switchScreen('screen-result');
                 renderResults();
@@ -632,10 +643,10 @@
             document.getElementById('finalScore').innerText = score;
             
             const msgEl = document.getElementById('reinforcementMsg');
-            if (score >= 750) {
+            if (score >= 700) {
                 msgEl.innerText = "Luar Biasa! Anda memiliki 'Saldo Emosi' yang sangat kaya. Tim Anda pasti merasa aman bekerja dengan Anda.";
                 msgEl.style.color = "var(--neon-lime)";
-            } else if (score >= 400) {
+            } else if (400 < score < 700) {
                 msgEl.innerText = "Kerja Bagus! Namun masih ada beberapa kebocoran saldo yang perlu dijaga dalam komunikasi harian.";
                 msgEl.style.color = "var(--neon-cyan)";
             } else {
@@ -663,31 +674,5 @@
             });
         }
     </script>
-<script>
-// Menunggu H5P selesai dimuat
-document.addEventListener('DOMContentLoaded', function() {
-    if (window.H5P && window.H5P.externalDispatcher) {
-        
-        // Dengarkan event xAPI (pergerakan data dalam H5P)
-        H5P.externalDispatcher.on('xAPI', function (event) {
-            
-            // Cek apakah aktivitas ini menghasilkan skor
-            if (event.getScore() !== null) {
-                var skorMentah = event.getScore();
-                var skorMaks = event.getMaxScore();
-                
-                // Ubah skor menjadi skala 100
-                var nilaiAkhir = Math.round((skorMentah / skorMaks) * 100);
-
-                // Tembakkan nilai ke file SCORM pembungkus (LMS)
-                window.parent.postMessage({
-                    jenis: "KIRIM_NILAI",
-                    nilai: nilaiAkhir
-                }, "*");
-            }
-        });
-    }
-});
-</script>
 </body>
 </html>
